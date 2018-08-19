@@ -17,7 +17,6 @@ instance_names:
 - "metering2"
 - "haproxy"
 
-ssh-key: 
-
 resource_group: ansible-azure-stack2
 storage_account: composestorageaccount2
+
