@@ -1,0 +1,116 @@
+#- name: Create Azure VM
+#  hosts: localhost
+#  connection: local
+#  tasks:
+
+  - name: Create a resource group
+    azure_rm_resourcegroup:
+      name: "{{ resource_group }}"
+      location: westindia
+
+  - name: create an account
+    azure_rm_storageaccount:
+      resource_group: "{{ resource_group }}"
+      name: "{{ storage_account }}"
+      type: Standard_LRS  
+
+  - name: Create virtual network
+    azure_rm_virtualnetwork:
+      resource_group: "{{ resource_group }}"
+      name: azurestack-Vnet
+      address_prefixes: "10.0.0.0/16"
+  - name: Add subnet
+    azure_rm_subnet:
+      resource_group: "{{ resource_group }}"
+      name: DMZ
+      address_prefix: "10.0.1.0/24"
+      virtual_network: azurestack-Vnet
+      
+      
+  - name: Create public IP address
+    azure_rm_publicipaddress:
+      resource_group: "{{ resource_group }}"
+      allocation_method: Static
+      name: "{{ item }}"
+    loop: "{{ instance_names }}"
+    register: publicipaddress
+
+  - debug: 
+         var: publicipaddress.results
+
+  - name: Add public ip address to hosts file for later installation
+    add_host:
+        name: "{{ item.state.ip_address }}"
+        groups: "{{ item.state.name }}"
+    with_items: "{{ publicipaddress.results }}"
+
+  - name: Set ip address in file
+    lineinfile:
+      dest: ./servers
+      regexp: "{{  item.state.ip_address }}"
+      line: "[{{ item.state.name }}]\n{{ item.state.ip_address }}"
+    with_items: "{{ publicipaddress.results }}"
+
+      
+  - name: Create Network Security Group that allows SSH
+    azure_rm_securitygroup:
+      resource_group: "{{ resource_group }}"
+      name: azurestack-nsg
+      rules:
+        - name: SSH
+          protocol: Tcp
+          destination_port_range: 22
+          access: Allow
+          priority: 1010
+          direction: Inbound
+        - name: http
+          protocol: Tcp
+          destination_port_range: 8081
+          access: Allow
+          priority: 1020
+          direction: Inbound
+        - name: haproxystats
+          protocol: Tcp
+          destination_port_range: 32700
+          access: Allow
+          priority: 1030
+          direction: Inbound
+        - name: https
+          protocol: Tcp
+          destination_port_range: 443
+          access: Allow
+          priority: 1040
+          direction: Inbound
+        
+
+  
+  - name: Create virtual network inteface card
+    azure_rm_networkinterface:
+      resource_group: "{{ resource_group }}"
+      name: "NIC{{ item }}"
+      virtual_network: azurestack-Vnet
+      subnet: DMZ
+      public_ip_name: "{{ item }}"
+      security_group: azurestack-nsg
+      open_ports: [ 22 , 8081 , 8080 , 443 ,32700 ]
+    loop: "{{ instance_names }}"
+  
+  - name: Create VM
+    azure_rm_virtualmachine:
+      resource_group: "{{ resource_group }}"
+      name: "vm-{{ item }}"
+      storage_account_name: "{{ storage_account }}"
+      os_disk_caching: ReadWrite
+      vm_size: Standard_DS1_v2
+      admin_username: compose
+      ssh_password_enabled: false
+      ssh_public_keys: 
+        - path: /home/compose/.ssh/authorized_keys
+          key_data: "{{ ssh-key }}"
+      network_interfaces: "NIC{{ item }}"
+      image:
+        offer: CentOS
+        publisher: OpenLogic
+        sku: '7.4'
+        version: latest
+    loop: "{{ instance_names }}"

@@ -1,0 +1,3 @@
+---
+- include: azure-infra.yml
+#- include: aws-infra.yml

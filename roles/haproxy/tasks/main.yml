@@ -1,0 +1,61 @@
+---
+- name: create directory
+  file: path=/etc/ssl/private state=directory
+
+- name: copy rpm to remote host
+  copy: src=../files/haproxy18-1.8.1-5.el7.x86_64.rpm dest=/etc/ssl/private/haproxy18-1.8.1-5.el7.x86_64.rpm
+
+- name: install the latest version of haproxy
+  yum:
+    name: /etc/ssl/private/haproxy18-1.8.1-5.el7.x86_64.rpm
+    state: present
+
+- name: generate unique private key
+  shell:  sudo openssl genrsa -out domain_name.key 2048
+
+- name: Generating a Certificate Signing Request (CSR)
+  shell: sudo openssl req -new -key domain_name.key -out domain_name.csr -subj "/C=IN/ST=Maharashtra/L=Pune/O=Atos/CN=Canopy"
+
+- name: Creating a Self-Signed Certificate (CRT)
+  shell:  openssl x509 -req -days 365 -in domain_name.csr -signkey domain_name.key -out domain_name.crt
+
+#- name: create directory
+ # file: path=/etc/ssl/private state=directory
+
+#- name: Move all files to /etc/ssl/private
+#  command: mv /home/compose /etc/ssl/private/
+
+
+- name: create directory /etc/haproxy/certs
+  sudo: yes
+  file:
+    path: /etc/haproxy/certs
+    state: directory
+    mode: 0755
+
+
+- name: create directory /run/haproxy
+  sudo: yes
+  file:
+    path: /run/haproxy
+    state: directory
+    mode: 0755
+
+
+- name: Append KEY and CRT to domain_name.pem
+  shell: sudo bash -c 'cat domain_name.key domain_name.crt >> /etc/ssl/private/mydomain.pem'
+
+- name: Move /etc/ssl/private/mydomain.pem to /etc/haproxy/certs/mydomain.pem
+  shell: sudo mv /etc/ssl/private/mydomain.pem  /etc/haproxy/certs/mydomain.pem
+
+- name: insert and update haproxy-config.hcl
+  sudo: yes
+  template:
+    src: haproxy.cfg.j2
+    dest: /etc/haproxy/haproxy.cfg
+    owner:  "{{ owner }}"
+    group:  "{{ group }}"
+    mode: "0755"
+
+- name: start and enable haproxy service on boot
+  service: name=haproxy state=started enabled=true  

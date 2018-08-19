@@ -1,0 +1,23 @@
+---
+#instance_type: t2.micro
+instance_type: t2.medium
+security_group: platform-stack
+image: ami-a2dcfbcd
+region: ap-south-1
+keypair: nik-ansible-controller
+wait_timeout: 600
+count: 5
+instance_names:
+- "amp5"
+- "amp5-ha"
+- "mariadb"
+- "vault"
+- "nexus"
+- "metering1"
+- "metering2"
+- "haproxy"
+
+ssh-key: 
+
+resource_group: ansible-azure-stack2
+storage_account: composestorageaccount2

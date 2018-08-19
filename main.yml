@@ -1,0 +1,19 @@
+---
+# Infrastructure creation for platform installation
+
+- hosts: localhost
+  connection: local
+  gather_facts: False
+  roles:
+     - platform-infra
+
+# Installation and configuration of Platform
+
+- hosts: haproxy
+  remote_user: compose
+  become: yes
+  become_method: sudo
+  connection: ssh
+  roles: 
+    - selinux   
+    - haproxy
