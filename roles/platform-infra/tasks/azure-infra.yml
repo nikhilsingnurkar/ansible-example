@@ -106,7 +106,7 @@
       ssh_password_enabled: false
       ssh_public_keys: 
         - path: /home/compose/.ssh/authorized_keys
-          key_data: "{{ ssh-key }}"
+          key_data: "{{ ssh_key }}"
       network_interfaces: "NIC{{ item }}"
       image:
         offer: CentOS
