@@ -8,13 +8,13 @@ keypair: nik-ansible-controller
 wait_timeout: 600
 count: 5
 instance_names:
-- "amp5"
-- "amp5-ha"
-- "mariadb"
-- "vault"
-- "nexus"
-- "metering1"
-- "metering2"
+#- "amp5"
+#- "amp5-ha"
+#- "mariadb"
+#- "vault"
+#- "nexus"
+#- "metering1"
+#- "metering2"
 - "haproxy"
 
 resource_group: ansible-azure-stack2
