@@ -48,7 +48,7 @@
     lineinfile:
       dest: ./servers
       regexp: "{{  item.state.ip_address }}"
-      line: "[{{ item.state.name }}]\n{{ item.state.ip_address }}"
+      line: "[{{ item.state.name }}]\n{{ item.state.ip_address }} ansible_ssh_common_args='-o StrictHostKeyChecking=no'"
     with_items: "{{ publicipaddress.results }}"
 
       
