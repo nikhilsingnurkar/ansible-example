@@ -6,8 +6,6 @@
   gather_facts: False
   roles:
      - platform-infra
-  environment:
-    profile: /home/compose/.azure/credentials
 # Installation and configuration of Platform
 
 - hosts: haproxy
