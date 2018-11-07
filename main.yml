@@ -6,6 +6,12 @@
   gather_facts: False
   roles:
      - platform-infra
+  environment:
+    AZURE_SUBSCRIPTION_ID: {{  hostvars[inventory_hostname].subscription_id }}
+    AZURE_CLIENT_ID: {{ hostvars[inventory_hostname].client_id }}
+    AZURE_SECRET: {{ hostvars[inventory_hostname].secret }}
+    AZURE_TENANT: {{ hostvars[inventory_hostname].tenant }}
+
 # Installation and configuration of Platform
 
 - hosts: haproxy
